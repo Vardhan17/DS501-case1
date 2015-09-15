@@ -1,0 +1,553 @@
+{
+cells: [
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"**TEAM Members:** Please EDIT this cell and add the names of all the team members in your team ",
+" ",
+" member 1 ",
+" ",
+" member 2 ",
+" ",
+" ..."
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"**Required Readings:** ",
+"* Chapter 1 and Chapter 9 of the book [Mining the Social Web](http://www.learndatasci.com/wp-content/uploads/2015/08/Mining-the-Social-Web-2nd-Edition.pdf) ",
+"* The codes for [Chapter 1](http://bit.ly/1qCtMrr) and [Chapter 9](http://bit.ly/1u7eP33) ",
+" ",
+" ",
+"** NOTE ** ",
+"* Please don't forget to save the notebook frequently when working in IPython Notebook, otherwise the changes you made can be lost. ",
+" ",
+"*----------------------"
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"#Case Study 1 : Collecting Data from Twitter ",
+" ",
+"** Due Date: Sep. 23, before the class** ",
+" ",
+"*------------"
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"#Problem 1: Sampling Twitter Data with Streaming API about a certain topic"
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"* Select a topic that you are interested in, for example, "WPI" or "Lady Gaga" ",
+"* Use Twitter Streaming API to sample a collection of tweets about this topic in real time. (It would be recommended that the number of tweets should be larger than 200, but smaller than 1 million. ",
+"* Store the tweets you downloaded into a local file (txt file or json file) "
+]
+},
+{
+cell_type: "code",
+execution_count: 27,
+metadata: {
+collapsed: false
+},
+outputs: [
+{
+name: "stdout",
+output_type: "stream",
+text: [
+"200 "
+]
+}
+],
+source: [
+"import twitter, io,json ",
+"#--------------------------------------------- ",
+"# Define a Function to Login Twitter API ",
+"def oauth_login(): ",
+" # Go to http://twitter.com/apps/new to create an app and get values ",
+" # for these credentials that you'll need to provide in place of these ",
+" # empty string values that are defined as placeholders. ",
+" # See https://dev.twitter.com/docs/auth/oauth for more information ",
+" # on Twitter's OAuth implementation. ",
+" ",
+" CONSUMER_KEY = 't6Q4gXf5S4BzCk5un16Wuovld' ",
+" CONSUMER_SECRET ='mTDPhFhCV85F2yy6Dj4fae9ItsGhtMuEX9tr6HF144IaWRqO07' ",
+" OAUTH_TOKEN = '3602884696-Ws75LsoF1z54KCU1KW88p6eaeTaw4rpMPNSBCRr' ",
+" OAUTH_TOKEN_SECRET = 'diuXUz3R0DRL1oRRG6qmJqsPAP7PbLI3yj6oJI63zWxZw' ",
+" ",
+" auth = twitter.oauth.OAuth(OAUTH_TOKEN, OAUTH_TOKEN_SECRET, ",
+" CONSUMER_KEY, CONSUMER_SECRET) ",
+" ",
+" twitter_api = twitter.Twitter(auth=auth) ",
+" return twitter_api ",
+" ",
+"#---------------------------------------------- ",
+"# Your code starts here ",
+"# Please add comments or text cells in between to explain the general idea of each block of the code. ",
+"# Please feel free to add more cells below this cell if necessary ",
+" ",
+"def twitter_search(twitter_api, word, max_results = 800, **kw): ",
+" search_results = twitter_api.search.tweets(q = word, count = 100, **kw) ",
+" statuses = search_results["statuses"] ",
+" ",
+" max_results = max(max_results, 1000) ",
+" ",
+" for _ in range(10): # 10*100 = 1000 ",
+" try: ",
+" next_results = search_results['search_metadata']['next_results'] ",
+" except KeyError, e: # No more results when next_results doesn't exist ",
+" break ",
+" nwords = dict([k.split("=") for k in next_results[1:].split("&")]) ",
+" search_results = twitter_api.search.tweets(**nwords) ",
+" if len(statuses) + len(search_results["statuses"]) < max_results: ",
+" statuses += search_results["statuses"] ",
+" else: ",
+" break ",
+" return statuses ",
+" ",
+"def save_json(filename, data): ",
+" with io.open('case1/{0}.json'.format(filename), ",
+" 'w', encoding='utf-8') as f: ",
+" f.write(unicode(json.dumps(data, ensure_ascii=False))) ",
+" ",
+"def load_json(filename): ",
+" with io.open('case1/{0}.json'.format(filename), ",
+" encoding='utf-8') as f: ",
+" return f.read() ",
+"twitter_api = oauth_login() ",
+" ",
+"results = twitter_search(twitter_api, "Hillary Clinton") ",
+"save_json("Hillary Clinton", results) ",
+"print len(results) "
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"###Report some statistics about the tweets you collected ",
+" ",
+"*The topic of interest: < INSERT YOUR TOPIC HERE> ",
+" ",
+" ",
+"*The total number of tweets collected: < INSERT THE NUMBER HERE>"
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"*-----------------------"
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"#Problem 2: Analyzing Tweets and Tweet Entities with Frequency Analysis ",
+" ",
+"**1. Word Count:** ",
+"* Use the tweets you collected in Problem 1, and compute the frequencies of the words being used in these tweets. ",
+"* Plot a table of the top 30 words with their counts"
+]
+},
+{
+cell_type: "code",
+execution_count: 25,
+metadata: {
+collapsed: false
+},
+outputs: [
+{
+name: "stdout",
+output_type: "stream",
+text: [
+"[(u'Hillary?', 28), (u'my', 27), (u'Will', 26), (u'-', 26), (u'finally', 26), (u'you.', 26), (u'@CNN', 26), (u'but', 26), (u'get', 25), (u'right', 24), (u'as', 24), (u'The', 24), (u'standing', 24), (u'only', 23), (u'4', 23), (u'so', 22), (u'A', 21), (u'says', 21), (u'1', 21), (u'survivors', 21), (u'2', 21), (u'by', 21), (u'know', 20), (u'Bill', 20), (u'like', 20), (u'then', 19), (u'Trump', 19), (u'can', 19), (u'college', 19), (u'If', 19), (u'5', 19), (u'more', 19), (u'stand', 19), (u'voting', 18), (u'we', 18), (u'was', 18), (u'why', 18), (u'You', 18), (u'he', 18), (u'campaign', 17), (u'would', 17), (u'after', 17), (u'assault:', 17), (u'assault', 17), (u'no', 17), (u'what', 17), (u'poll', 16), (u'--', 16), (u'survivors.', 15), (u'join', 15)] ",
+" "
+]
+}
+],
+source: [
+"#---------------------------------------------- ",
+"# Your code starts here ",
+"# Please add comments or text cells in between to explain the general idea of each block of the code. ",
+"# Please feel free to add more cells below this cell if necessary ",
+"import twitter, json, re ",
+"from collections import Counter ",
+" ",
+"statuses = json.loads(open('case1/hillaryclinton.json').read()) ",
+"def word_process(stauses): ",
+" status_texts1 = [re.sub(r'\s[#@][^\s]*|http[s]*://[^\s]*','', s['text']) for s in statuses] ",
+" words_origin = [w for t in status_texts1 for w in t.split(" ")] ",
+" c = Counter(words_origin) ",
+" for k in [words_origin]: ",
+" c = Counter(k); ",
+" print c.most_common()[50:100] ",
+" print ",
+" # for [k,v] in c.iteritems(): ",
+" # print k,":",v ",
+" ",
+"word_process(statuses) ",
+" ",
+" ",
+" ",
+" ",
+" ",
+" "
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"**2. Find the most popular tweets in your collection of tweets** ",
+" ",
+"Please plot a table of the top 10 tweets that are the most popular among your collection, i.e., the tweets with the largest number of retweet counts. "
+]
+},
+{
+cell_type: "code",
+execution_count: 31,
+metadata: {
+collapsed: false
+},
+outputs: [ ],
+source: [
+"#---------------------------------------------- ",
+"# Your code starts here ",
+"# Please add comments or text cells in between to explain the general idea of each block of the code. ",
+"# Please feel free to add more cells below this cell if necessary ",
+" ",
+" ",
+" ",
+" ",
+" ",
+" ",
+" ",
+" ",
+" ",
+" ",
+" "
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"**3. Find the most popular Tweet Entities in your collection of tweets** ",
+" ",
+"Please plot a table of the top 10 hashtags, top 10 user mentions that are the most popular in your collection of tweets."
+]
+},
+{
+cell_type: "code",
+execution_count: 32,
+metadata: {
+collapsed: false
+},
+outputs: [ ],
+source: [
+"#---------------------------------------------- ",
+"# Your code starts here ",
+"# Please add comments or text cells in between to explain the general idea of each block of the code. ",
+"# Please feel free to add more cells below this cell if necessary ",
+" ",
+" ",
+" ",
+" ",
+" "
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"*------------------------ ",
+" ",
+"#Problem 3: Getting "All" friends and "All" followers of a popular user in twitter "
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"* choose a popular twitter user who has many followers, such as "ladygaga". ",
+"* Get the list of all friends and all followers of the twitter user. ",
+"* Plot 20 out of the followers, plot their ID numbers and screen names in a table. ",
+"* Plot 20 out of the friends (if the user has more than 20 friends), plot their ID numbers and screen names in a table."
+]
+},
+{
+cell_type: "code",
+execution_count: 35,
+metadata: {
+collapsed: false
+},
+outputs: [ ],
+source: [
+"#---------------------------------------------- ",
+"# Your code starts here ",
+"# Please add comments or text cells in between to explain the general idea of each block of the code. ",
+"# Please feel free to add more cells below this cell if necessary ",
+" ",
+" ",
+" ",
+" ",
+" "
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"* Compute the mutual friends within the two groups, i.e., the users who are in both friend list and follower list, plot their ID numbers and screen names in a table"
+]
+},
+{
+cell_type: "code",
+execution_count: null,
+metadata: {
+collapsed: false
+},
+outputs: [ ],
+source: [
+"#---------------------------------------------- ",
+"# Your code starts here ",
+"# Please add comments or text cells in between to explain the general idea of each block of the code. ",
+"# Please feel free to add more cells below this cell if necessary ",
+" ",
+" ",
+" ",
+" ",
+" ",
+" "
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"*------------------------ ",
+" ",
+"#Problem 4: (optional) Explore the data ",
+" ",
+"Run some additional experiments with your data to gain familiarity with the twitter data ant twitter API"
+]
+},
+{
+cell_type: "code",
+execution_count: 2,
+metadata: {
+collapsed: false
+},
+outputs: [ ],
+source: [
+"#---------------------------------------------- ",
+"# Your code starts here ",
+"# Please add comments or text cells in between to explain the general idea of each block of the code. ",
+"# Please feel free to add more cells below this cell if necessary ",
+" ",
+" ",
+" "
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"*----------------- ",
+"# Done ",
+" ",
+"All set! ",
+" ",
+"** What do you need to submit?** ",
+" ",
+"* **Notebook File**: Save this IPython notebook, and find the notebook file in your folder (for example, "filename.ipynb"). This is the file you need to submit. Please make sure all the plotted tables and figures are in the notebook. If you used "ipython notebook --pylab=inline" to open the notebook, all the figures and tables should have shown up in the notebook. ",
+" ",
+" ",
+"* **PPT Slides**: please prepare PPT slides (for 10 minutes' talk) to present about the case study . We will ask two teams which are randomly selected to present their case studies in class for this case study. ",
+" ",
+"* ** Report**: please prepare a report (less than 10 pages) to report what you found in the data. ",
+" * What data you collected? ",
+" * Why this topic is interesting or important to you? (Motivations) ",
+" * How did you analyse the data? ",
+" * What did you find in the data? ",
+" ",
+" (please include figures or tables in the report, but no source code) ",
+" ",
+"Please compress all the files in a zipped file. ",
+" ",
+" ",
+"** How to submit: ** ",
+" ",
+" Please submit through myWPI, in the Assignment "Case Study 1". ",
+" ",
+"** Note: Each team just need to submit one submission in myWPI **"
+]
+},
+{
+cell_type: "markdown",
+metadata: { },
+source: [
+"# Grading Criteria: ",
+" ",
+"** Totoal Points: 100 ** ",
+" ",
+" ",
+"--------------------------------------------------------------------------- ",
+"** Notebook: ** ",
+" Points: 60 ",
+" ",
+" ",
+" ----------------------------------- ",
+" Qestion 1: ",
+" Points: 20 ",
+" ----------------------------------- ",
+" ",
+" (1) Select a topic that you are interested in. ",
+" Points: 6 ",
+" ",
+" (2) Use Twitter Streaming API to sample a collection of tweets about this topic in real time. (It would be recommended that the number of tweets should be larger than 200, but smaller than 1 million. Please check whether the total number of tweets collected is larger than 200? ",
+" Points: 10 ",
+" ",
+" ",
+" (3) Store the tweets you downloaded into a local file (txt file or json file) ",
+" Points: 4 ",
+" ",
+" ",
+" ----------------------------------- ",
+" Qestion 2: ",
+" Points: 20 ",
+" ----------------------------------- ",
+" ",
+" 1. Word Count ",
+" ",
+" (1) Use the tweets you collected in Problem 1, and compute the frequencies of the words being used in these tweets. ",
+" Points: 4 ",
+" ",
+" (2) Plot a table of the top 30 words with their counts ",
+" Points: 4 ",
+" ",
+" 2. Find the most popular tweets in your collection of tweets ",
+" plot a table of the top 10 tweets that are the most popular among your collection, i.e., the tweets with the largest number of retweet counts. ",
+" Points: 4 ",
+" ",
+" 3. Find the most popular Tweet Entities in your collection of tweets ",
+" ",
+" (1) plot a table of the top 10 hashtags, ",
+" Points: 4 ",
+" ",
+" (2) top 10 user mentions that are the most popular in your collection of tweets. ",
+" Points: 4 ",
+" ",
+" ",
+" ----------------------------------- ",
+" Qestion 3: ",
+" Points: 20 ",
+" ----------------------------------- ",
+" ",
+" (1) choose a popular twitter user who has many followers, such as "ladygaga". ",
+" Points: 4 ",
+" ",
+" (2) Get the list of all friends and all followers of the twitter user. ",
+" Points: 4 ",
+" ",
+" (3) Plot 20 out of the followers, plot their ID numbers and screen names in a table. ",
+" Points: 4 ",
+" ",
+" (4) Plot 20 out of the friends (if the user has more than 20 friends), plot their ID numbers and screen names in a table. ",
+" Points: 4 ",
+" ",
+" (5) Compute the mutual friends within the two groups, i.e., the users who are in both friend list and follower list, plot their ID numbers and screen names in a table ",
+" Points: 4 ",
+" ",
+" ----------------------------------- ",
+" ----------------------------------- ",
+" Problem 4 (Optional): Explore the data ",
+" Bonus points: 10 ",
+" Novelty: 5 ",
+" Interestingness: 5 ",
+" ----------------------------------- ",
+" Run some additional experiments with your data to gain familiarity with the twitter data ant twitter API ",
+" ",
+" ",
+" ",
+" ",
+"--------------------------------------------------------------------------- ",
+"** Report: communicate the results** ",
+" Points: 20 ",
+" ",
+"(1) What data you collected? ",
+" Points: 5 ",
+" ",
+"(2) Why this topic is interesting or important to you? (Motivations) ",
+" Points: 5 ",
+" ",
+"(3) How did you analyse the data? ",
+" Points: 5 ",
+" ",
+"(4) What did you find in the data? ",
+"(please include figures or tables in the report, but no source code) ",
+" Points: 5 ",
+" ",
+" ",
+" ",
+"--------------------------------------------------------------------------- ",
+"** Slides (for 10 minutes of presentation): Story-telling ** ",
+" Points: 20 ",
+" ",
+" ",
+"1. Motivation about the data collection, why the topic is interesting to you. ",
+" Points: 5 ",
+" ",
+"2. Communicating Results (figure/table) ",
+" Points: 10 ",
+" ",
+"3. Story telling (How all the parts (data, analysis, result) fit together as a story?) ",
+" Points: 5 ",
+" "
+]
+},
+{
+cell_type: "code",
+execution_count: null,
+metadata: {
+collapsed: false
+},
+outputs: [ ],
+source: [ ]
+}
+],
+metadata: {
+kernelspec: {
+display_name: "Python 2",
+language: "python",
+name: "python2"
+},
+language_info: {
+codemirror_mode: {
+name: "ipython",
+version: 2
+},
+file_extension: ".py",
+mimetype: "text/x-python",
+name: "python",
+nbconvert_exporter: "python",
+pygments_lexer: "ipython2",
+version: "2.7.6"
+}
+},
+nbformat: 4,
+nbformat_minor: 0
+}
